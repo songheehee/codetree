@@ -15,6 +15,7 @@
 
 [리팩토링]
     - dfs에서 이중 for문 돌면서 고르지 않고 빈칸인 곳의 리스트를 만들어서 거기서 세개 뽑아도 됐을듯. 최대 64개라 이게 나을 것 같음
+    - 마지막에 안전 영역을 for문 돌면서 세지 말고 빈칸 개수 미리 세놓고 불 번질 때마다 -1 하기
 '''
 # 불은 상하좌우로 '모두' 번짐. 방화벽 뚫을 수는 없음
 # 방화벽 추가로 3개 설치 가능. 불 있는 위치에는 불가
@@ -33,6 +34,8 @@ def bfs():
     q = deque()
     q.extend(fire)
 
+    fire_count = 0
+
     while q:
         cr, cc = q.popleft()
 
@@ -46,25 +49,18 @@ def bfs():
             if new_matrix[nr][nc] == 0:
                 new_matrix[nr][nc] = 2 # 불
                 q.append((nr, nc))
+                fire_count += 1
 
-    # 불이 퍼지지 않은 영역 카운트
-    count = 0
-
-    for i in range(n):
-        for j in range(m):
-            if new_matrix[i][j] == 0:
-                count += 1
-
-    return count
+    return fire_count
 
 
-def dfs(start): # 방화벽 설치할 곳 3개 고르기
+def dfs(start): # 방화벽 설치할 곳 3개 고르기. 3중 for문 돌려도 됨
     global max_area
 
     if len(select) == 3:
         # 방화벽 설치 후 불 퍼트리기
-        area = bfs()
-        max_area = max(max_area, area)
+        count = bfs()
+        max_area = max(max_area, safe_count - count - 3)
         return
 
     for i in range(start, len(wall)):
@@ -88,6 +84,7 @@ for i in range(n):
 
 select = []
 max_area = 0
+safe_count = len(wall)
 
 dfs(0)
 

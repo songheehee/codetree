@@ -25,7 +25,7 @@ while q.count(0) < k:
     # n 위치에 사람 있으면 내림
     n_pos = (point + n - 1) % (2 * n)
     if n_pos in ppl:
-        ppl.remove(n_pos)
+        ppl.popleft()
 
     # 2. 먼저 올라간 사람부터 무빙워크가 회전하는 방향으로 한칸 이동. 앞에 사람 있거나 안정성 0인 경우 이동 X
     for _ in range(len(ppl)):

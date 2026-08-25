@@ -19,17 +19,13 @@ def sort_rows(row_num):
             else:
                 count[num] = 1
 
-        sort_count = dict()
-        for k, v in count.items():
-            if v in sort_count:
-                sort_count[v].append(k)
-            else:
-                sort_count[v] = [k]
+        lst = list(count.items())
+        lst.sort(key=lambda x: (x[1], x[0])) # 개수, 숫자
 
         new_row = []
-        for k in sorted(sort_count.keys()):
-            for v in sorted(sort_count[k]):
-                new_row.extend([v, k])
+        for k, v in lst:
+            new_row.append(k)  # 개수 적을 경우 extend 보다 append가 낫다 함
+            new_row.append(v)
 
         matrix[i] = new_row
 

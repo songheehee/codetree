@@ -1,12 +1,6 @@
-# 좌측 상단에 있는 빙하를 회전시키게 되면 다른 상하좌우의 인접한 격자도 똑같은 크기만큼 회전
-# 상하좌우 얼음이 3개 이상이면 녹지 않음. 그렇지 않으면 -1. 녹는 건 동시에 진행
-# 남아있는 빙하의 총 양과 가장 큰 얼음 군집 크기
-# 사등분 해서 2^레벨을 시계방향으로 회전
-
 from collections import deque
 
 def bfs(r, c): # 얼음군집 찾기
-    visited = [[0] * N for _ in range(N)]
     q = deque([(r, c)])
     visited[r][c] = 1
     count = 1 # 군집 개수
@@ -95,10 +89,11 @@ for level in levels:
     melt()
 
 max_ice = 0
+visited = [[0] * N for _ in range(N)]
 
 for i in range(N):
     for j in range(N):
-        if matrix[i][j]:
+        if matrix[i][j] and not visited[i][j]:
             max_ice = max(max_ice, bfs(i, j))
 
 print(sum(map(sum, matrix)))

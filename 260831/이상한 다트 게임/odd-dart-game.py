@@ -1,5 +1,3 @@
-# 인덱스를 생각하고도!!! N, M 잘못 해서 인덱스 오류남 ㅡㅡ 스튜핏
-
 # 12시 방향부터 m개의 정수가 시계방향 순서대로
 # 각 원판의 회전은 독립적
 # x의 배수일 경우 회전
@@ -75,17 +73,16 @@ for _ in range(Q):
         if i == 0:
             continue
 
-        for _ in range(K):
-            if D == 0: # 시계
-                circles[i-1].rotate(1)
-            else:
-                circles[i-1].rotate(-1)
+        if D == 0: # 시계
+            circles[i-1].rotate(K) # K하면 그냥 K번 도는거였음 ㄷㄷ
+        else:
+            circles[i-1].rotate(-K)
 
     # 숫자 삭제
     result = delete()
 
     # 숫자 안 남아있으면 끝내기
-    if sum(row.count(0) for row in circles) == N*M: # 남아있는 수가 없음
+    if sum(map(sum, circles)) == 0: # 남아있는 수가 없음
         break
 
     # 정규화

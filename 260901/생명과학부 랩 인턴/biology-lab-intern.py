@@ -10,17 +10,6 @@ def move(): # 곰팡이들 움직이기
     new_virus = dict()
 
     for (r, c), (size, d, s) in list(virus.items()):
-        if s == 0:
-            # 이 때도 이미 있을 수 있음!
-            if (r, c) in new_virus:
-                exist, *_ = new_virus[(r, c)]
-
-                if exist > size:
-                    continue
-
-            new_virus[(r, c)] = (size, d, s)
-            continue
-
         nr = r + (dr[d] * s)
         nc = c + (dc[d] * s)
 

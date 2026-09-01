@@ -1,12 +1,3 @@
-# 격자판 흰, 빨, 파
-# 말 1~K번. 번호, 이동 방향 정해져있음
-# 1. 말이 이동하려는 칸이 흰색이면 해당 칸으로 이동. 이미 말이 있으면 말 위에 올림. 여러번 올리기 가능
-# 2. 빨간 칸이면 순서 말 순서 뒤집고 말 이동
-# 3. 파란 칸이면 이동하지 않고 방향 반대로 전환 뒤 이동. 근데 반대쪽도 파랑이다 -> 이동하지 않음. 이동하려는 말만 방향 전환
-# 4. 격자판 범위 벗어나면 방향 반대로 전환 뒤 이동
-# 쌓여있는 말 다 같이 이동
-# 말이 4개 이상 겹쳐지면 그 즉시 종료
-
 def move():
     for i in range(K):
         r, c, d = order[i]
@@ -26,88 +17,31 @@ def move():
                 order[i] = (r, c, d)
                 continue
 
-        if matrix[nr][nc] == 0: # 흰
+        if matrix[nr][nc] == 0 or matrix[nr][nc] == 1: # 흰/빨
             # 말 있으면 다 같이 이동
             idx = horses[(r, c)].index(i)
-            lst = horses[(r, c)][idx:] # 말 순서만 적혀있음
+            lst = horses[(r, c)][idx:] if matrix[nr][nc] == 0 else horses[(r, c)][idx:][::-1]
             new_lst = horses[(r, c)][:idx]
 
-            if len(lst) > 1:
-                if new_lst:
-                    horses[(r, c)] = new_lst
-                else:
-                    horses.pop((r, c), None)
-
-                if (nr, nc) in horses:
-                    horses[(nr, nc)].extend(lst)
-
-                    if len(horses[(nr, nc)]) >= 4:
-                        return True
-                else:
-                    horses[(nr, nc)] = lst
-
-                for num in lst:
-                    if i == num:
-                        order[i] = (nr, nc, d)
-                    else:
-                        order[num] = (nr, nc, order[num][2])
-
+            if new_lst:
+                horses[(r, c)] = new_lst
             else:
-                order[i] = (nr, nc, d)
+                horses.pop((r, c), None)
 
-                if new_lst:
-                    horses[(r, c)] = new_lst
-                else:
-                    horses.pop((r, c), None)
+            if (nr, nc) in horses:
+                horses[(nr, nc)].extend(lst)
 
-                if (nr, nc) in horses:
-                    horses[(nr, nc)].append(i)
-
-                    if len(horses[(nr, nc)]) >= 4:
-                        return True
-                else:
-                    horses[(nr, nc)] = [i]
-
-        elif matrix[nr][nc] == 1: # 빨강
-            # 말 순서 뒤집고 이동
-            idx = horses[(r, c)].index(i)
-            lst = horses[(r, c)][idx:][::-1] # 거꾸로
-            new_lst = horses[(r, c)][:idx]
-
-            if len(lst) > 1:
-                if new_lst:
-                    horses[(r, c)] = new_lst
-                else:
-                    horses.pop((r, c), None)
-
-                if (nr, nc) in horses:
-                    horses[(nr, nc)].extend(lst)
-
-                    if len(horses[(nr, nc)]) >= 4:
-                        return True
-                else:
-                    horses[(nr, nc)] = lst
-
-                for num in lst:
-                    if i == num:
-                        order[i] = (nr, nc, d)
-                    else:
-                        order[num] = (nr, nc, order[num][2])
+                if len(horses[(nr, nc)]) >= 4:
+                    return True
             else:
-                order[i] = (nr, nc, d)
+                horses[(nr, nc)] = lst
 
-                if new_lst:
-                    horses[(r, c)] = new_lst
+            for num in lst:
+                if i == num:
+                    order[i] = (nr, nc, d)
                 else:
-                    horses.pop((r, c), None)
+                    order[num] = (nr, nc, order[num][2])
 
-                if (nr, nc) in horses:
-                    horses[(nr, nc)].append(i)
-
-                    if len(horses[(nr, nc)]) >= 4:
-                        return True
-                else:
-                    horses[(nr, nc)] = [i]
 
 def change_dir(d):
     if d == 0 or d == 2:
@@ -124,10 +58,7 @@ horses = dict() # 몇번 말, 방향. 0번이 맨 밑
 order = [0] * K # 말 순서. 위치, 방향
 
 for i in range(K):
-    X, Y, D = map(int, input().split())
-    X -= 1
-    Y -= 1
-    D -= 1
+    X, Y, D = map(lambda x: int(x)-1, input().split())
 
     order[i] = (X, Y, D)
     horses[(X, Y)] = [i] # 처음엔 한 칸에 한 말

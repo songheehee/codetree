@@ -7,16 +7,7 @@
 # 0부터 채우고 끝 두개가 연한 블록
 
 def fill(matrix, type, col):
-    if type == 1:
-        lr = 0
-        for i in range(5, -1, -1): # 마지막 인덱스 찾아주기
-            if matrix[i][col] == 1:
-                lr = i+1
-                break
-
-        matrix[lr][col] = 1
-
-    elif type == 2: # 열 두칸
+    if type == 2: # 열 두칸
         lr = 0
         for i in range(5, -1, -1):  # 마지막 인덱스 찾아주기
             if matrix[i][col] == 1 or matrix[i][col+1] == 1:
@@ -25,14 +16,17 @@ def fill(matrix, type, col):
 
         matrix[lr][col] = matrix[lr][col+1] = 1
 
-    else: # 행 두칸
+    else:
         lr = 0
         for i in range(5, -1, -1):  # 마지막 인덱스 찾아주기
             if matrix[i][col] == 1:
                 lr = i + 1
                 break
 
-        matrix[lr][col] = matrix[lr+1][col] = 1
+        if type == 1:
+            matrix[lr][col] = 1
+        else: # 행 두칸
+            matrix[lr][col] = matrix[lr+1][col] = 1
 
 def delete(matrix):
     global score
@@ -52,12 +46,9 @@ def check(matrix):
 
 
 K = int(input()) # 블록 입력 횟수
-# red = [[0] * 6 for _ in range(4)] # 4,5 열
 red = [[0] * 4 for _ in range(6)]
 yellow = [[0] * 4 for _ in range(6)] # 4,5 행
 score = 0
-rc = 0 # 칠하기 시작할 곳
-yr = 0
 
 for _ in range(K): # 10,000
     T, R, C = map(int, input().split()) # 블록 종류, 위치

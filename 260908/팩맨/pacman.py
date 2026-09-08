@@ -1,3 +1,31 @@
+'''
+소요시간 : 1시간 23분
+수행 시간 : 52ms / 메모리 : 16MB
+
+이해 및 구상 (16분) - 구현 및 디버깅 (1시간 7분)
+
+[구상]
+    - 또 이동 문제가 나왔따리. dict로 할까 리스트로 할까 나는 딕셔너리 파이긴 한데 알, 시체 많으니까 몬스터는 리스트로 할까
+    - 처음에 매트릭스 크기가 안 나와있어서 딕셔너리로 하려다가 맨 첫 줄에;; 4*4 라길래 작아서 매트릭스로 바꿈
+    - 딕셔너리로 하려고 할 때는 몬스터랑 알을 같은 딕셔너리로 처리해줄까 하다가 어차피 리스트로 해서 따로 처리해줬다
+    - 그럼 이제 시체랑 알을 같은 딕셔너리로 해줄까 하다가 헷갈리니까 그냥 따로 처리해줌
+    - 몬스터, 시체, 알 다 한 칸에 여러개 들어갈 수 있음!!! 유의
+    - 혹시 몰라서 몬스터 초기 위치랑 팩맨 초기 위치 같을 수 있다는 거 적어놨는데 딱히 신경 안 써도 될듯?
+    - 대신 팩맨이 이동 전에 몬스터랑 같이 있어도 얘는 안 먹는다는 거 인지했음
+
+[구현]
+    - 문제에서 아주 친절하게 1번 2번 이렇게 써놔줘서 고대로 따라갔다
+    - 팩맨 이동할 때 격자 밖으로 나가는 건 ㄴㄴ 상하좌우 중에 3개 중복으로 고르는 거라 순열로 풀었다. 난 부분집합으로 푼 줄 알았는데 지금 보니까 순열이네; 띠용
+    - 리스트도 min 되나 잠깐 디버깅에서 확인해봄 -> 된다!
+    - 처음에 원복시켜주는거 귀찮아서 바로 len(matrix[nr][nc]) 더해주는걸로 했는데 그럼 왔다갔다 하면서 중복 카운트 될 수 있음; 하 귀찮아...
+    - nr, nc가 pr, pc 가 아니어야 하는데 or 인지 and 인지 헷갈려서 그냥 튜플로 비교...or 일 거 같음
+    - 헷갈렸던 건 시체 소멸이 이번 시체가 이번에 소멸인지 아닌지 헷갈...근데 예시 보니까 다다음까지 살아있길래 그냥 애초에 3으로 줌
+
+[리팩토링]
+    - 어차피 팩맨 이동 시 우선순위부터 보기 때문에 같을 경우 생각할 필요 없음
+    - egg 딕셔너리 만들지 않고 그냥 복사하면 되잖아...?? 세상에 생각도 못했다;
+    - 시체 딕셔너리가 낫나...리스트가 낫나...
+'''
 # 몬스터 상하좌우, 대각선
 # 1. 몬스터 복제 시도 - 현재 몬스터 위치에서 같은 방향 알
 # 2. 몬스터 이동 - 몬스터 시체/팩맨/격자 벗어남 -> 반시계 45도 회전 가능할때까지. 다 못가면 이동하지 않음
@@ -6,7 +34,6 @@
 # 4. 몬스터 시체 소멸 - 시체는 2턴 동안 유지
 # 5. 몬스터 복제 완성 - 알 깨어남
 # 몬스터 초기 위치랑 팩맨 초기 위치 같을 수 있음
-# 몬스터, 알 하나로 할까
 
 def pac_move(r, c, move, count):
     global max_count, min_move
@@ -15,10 +42,6 @@ def pac_move(r, c, move, count):
         if count > max_count:
             max_count = count
             min_move = dirs[:]
-
-        elif count == max_count:
-            min_move = min(min_move, dirs)
-
         return
 
     for i in range(4):
@@ -45,22 +68,18 @@ def monster_move():
                 continue
 
             for d in matrix[i][j]:
-                nr = i + ddr[d]
-                nc = j + ddc[d]
-
                 # 반시계 45도 회전
-                if not (0 <= nr < 4 and 0 <= nc < 4) or (nr == pr and nc == pc) or (nr, nc) in dead:
-                    for k in range(1, 8):
-                        nd = (d + k) % 8
-                        nr = i + ddr[nd]
-                        nc = j + ddc[nd]
+                for k in range(8): # 처음이 원래 방향
+                    nd = (d + k) % 8
+                    nr = i + ddr[nd]
+                    nc = j + ddc[nd]
 
-                        if (0 <= nr < 4 and 0 <= nc < 4) and (nr, nc) != (pr, pc) and (nr, nc) not in dead:
-                            d = nd
-                            break
+                    if (0 <= nr < 4 and 0 <= nc < 4) and (nr, nc) != (pr, pc) and (nr, nc) not in dead:
+                        d = nd
+                        break
 
-                    else: # 그럼에도 못 찾으면 이동하지 않음
-                        nr, nc = i, j
+                else: # 그럼에도 못 찾으면 이동하지 않음
+                    nr, nc = i, j
 
                 new_matrix[nr][nc].append(d)
 
@@ -83,19 +102,8 @@ for _ in range(M):
     matrix[R][C].append(D)
 
 for _ in range(T):
-    eggs = dict()  # 알. 좌표 : 방향. 여러개 가능
-
     # 1. 몬스터 복제
-    for i in range(4):
-        for j in range(4):
-            if not matrix[i][j]:
-                continue
-
-            for d in matrix[i][j]:
-                if (i, j) in eggs:
-                    eggs[(i, j)].append(d)
-                else:
-                    eggs[(i, j)] = [d]
+    eggs = [[mon[:] for mon in row] for row in matrix]
 
     # 2. 몬스터 이동
     matrix = monster_move()
@@ -135,7 +143,9 @@ for _ in range(T):
             dead.pop(k)
 
     # 6. 알 부화
-    for (r, c), egg in list(eggs.items()):
-        matrix[r][c].extend(egg) # 여러 마리일 수 있음
+    for i in range(4):
+        for j in range(4):
+            if eggs[i][j]:
+                matrix[i][j].extend(eggs[i][j]) # 여러 마리일 수 있음
 
 print(sum(len(mon) for row in matrix for mon in row)) # 몬스터 마리 수

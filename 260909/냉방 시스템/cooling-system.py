@@ -16,9 +16,7 @@ def blow():
         while q:
             nq = deque([])
 
-            while q:
-                cr, cc = q.popleft()
-
+            for cr, cc in q:
                 if visited[cr][cc] == 1:
                     break
 

@@ -1,6 +1,8 @@
 '''
 소요시간 : 3시간 17분
-수행 시간 : 380ms / 메모리 : 24MB
+수행 시간 : 380ms / 메모리 : 24MB (bfs 단계 while문)
+수행 시간 : 395ms / 메모리 : 24MB (bfs 단계 for문)
+수행 시간 : 365ms / 메모리 : 24MB (동시에 시원함 퍼질 때 나보다 작은 애만 검사)
 시도 : 2번
 
 이해 및 구상 (45분) - 구현 및 디버깅 (1시간 22분) - 디버깅 (1시간 10분)
@@ -17,7 +19,7 @@
     - 저번에 bfs 단계 별로 도는 게 기억나서 그렇게 해봤당. 근데 for문 보다 while pop이 더 시간이 적게 걸린다 머지???
     - 그리고 난 또 while문 종료 조건을 어디에다 써야되나 백번 고민했다
     - 동시에 시원함 퍼지는거 어떻게 할까 고민하다가 저번에 지호님 코드 보고 일단 다 해주고 // 2 하는 걸로 했다
-    - 그냥 원래꺼 복사해서 할까 하다가 어차피 0 미만인거 계산해줘야되니까. 근데 그냥 무조건 나보다 작은 애랑만 하면 안되나?
+    - 그냥 원래꺼 복사해서 할까 하다가 어차피 0 미만인거 계산해줘야되니까. 근데 그냥 무조건 나보다 작은 애랑만 하면 안되나? -> 된당
 
 [실수]
     - 계속 공기가 마이너스 안 되게 신경 써야됐는데 하 중간에 놓쳤음
@@ -25,6 +27,10 @@
     - 처음 에어컨도 대각선, 앞, 대각선 계산해서 바꿔줌. 그리고 이게 에어컨 바로 앞에 벽이 있으면 어떡하지? 했는데 문제에 그런 경우 없다고 써있었음;; -> 그래서 조건 줬다가 뺌. 문제를 잘 읽자!
     - 벽 검사에서 진짜 오백번 틀렸다...오아는 -2 해줘야 된다!!!
     - 처음에 cr, cc로 하다가 움직여야 되니까 새로운 변수로 만들어놓고 왜 wall 검사는 cr, cc로 하냐고.
+
+[리팩토링]
+    - 처음에 벽 받을 때 그냥 옆칸 오른, 아래도 표시해놓는게 좋을라나
+    - 아 wind에 좌표 말고 방향 인덱스 넣어도 되는구나
 '''
 # 0 = 빈칸, 1 = 사무실, 2 = 에어컨 (왼), 3 = 에어컨 (위), 4 = 에어컨 (오), 5 = 에어컨 (아래)
 # 1. 공기 시원하게 함 but 벽 있으면 ㄴㄴ. 위 45도는 위->오, 아래 45도는 아래->오. 에어컨 있는 곳도 전파 가능
@@ -42,9 +48,7 @@ def blow():
         visited[r][c] = 6
 
         while q:
-            nq = deque([])
-
-            while q:
+            for _ in range(len(q)):
                 cr, cc = q.popleft()
 
                 if visited[cr][cc] == 1:
@@ -57,7 +61,7 @@ def blow():
                     # 에어컨 바로 옆/앞 벽 없음
                     visited[nr][nc] = visited[cr][cc] - 1
                     cold[nr][nc] += visited[nr][nc]
-                    nq.append((nr, nc))
+                    q.append((nr, nc))
                     break
 
                 for lst in wind[d]:
@@ -82,9 +86,7 @@ def blow():
                     else: # 다 갔음
                         visited[nr][nc] = visited[cr][cc] - 1
                         cold[nr][nc] += visited[nr][nc]
-                        nq.append((nr, nc))
-
-            q = nq
+                        q.append((nr, nc))
 
 def mix():
     new_cold = [row[:] for row in cold] # 동시에
@@ -98,9 +100,6 @@ def mix():
                 if not (0 <= nr < N and 0 <= nc < N):
                     continue
 
-                if cold[nr][nc] >= cold[i][j]:
-                    continue
-
                 if d in (0, 1):  # 왼위 체크
                     if (i, j) in wall and d in wall[(i, j)]:
                         continue
@@ -110,16 +109,16 @@ def mix():
 
                 diff = (cold[i][j] - cold[nr][nc]) // 4
 
-                new_cold[i][j] -= diff
-                new_cold[i][j] = max(new_cold[i][j], 0)
-                new_cold[nr][nc] += diff
+                if diff > 0: # 나보다 작은 애만
+                    new_cold[i][j] -= diff # 빼도 무조건 양수
+                    new_cold[nr][nc] += diff
 
     return new_cold
 
 
 dr = [0, -1, 0, 1] # 왼위오아
 dc = [-1, 0, 1, 0]
-# 에어컨 시원함 퍼지는 정도
+# 에어컨 시원함 퍼지는 정도. 좌표, 확인할 방향
 wind = [[[(-1, 0, 1), (0, -1, 0)], [(0, -1, 0)], [(1, 0, 3), (0, -1, 0)]],
         [[(0, -1, 0), (-1, 0, 1)], [(-1, 0, 1)], [(0, 1, 2), (-1, 0, 1)]],
         [[(-1, 0, 1), (0, 1, 2)], [(0, 1, 2)], [(1, 0, 3), (0, 1, 2)]],
@@ -169,9 +168,12 @@ while True:
 
     # 3. 외벽 -1
     for i in range(N):
-        for j in range(N):
-            if (i in (0, N-1) or j in (0, N-1)) and cold[i][j] > 0:
-                cold[i][j] -= 1
+        cold[i][0] = max(cold[i][0]-1, 0)
+        cold[i][-1] = max(cold[i][-1]-1, 0)
+
+    for j in range(1, N-1):
+        cold[0][j] = max(cold[0][j]-1, 0)
+        cold[-1][j] = max(cold[-1][j]-1, 0)
 
     time += 1
 

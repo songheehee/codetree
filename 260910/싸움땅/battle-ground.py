@@ -4,42 +4,30 @@
 # 2-2. 이동한 방향에 플레이어가 있는 경우 싸움. 능력치 + 총 비교. 같을 경우 초기 능력치가 더 높은 사람 승리
 #      진 사람은 총 내려놓고 방향대로 한칸 이동. 만약 격자 밖/다른 플레이어 있으면 90도 회전 후 이동. 총 있으면 획득
 #      이긴 사람은 공격력 차이만큼 포인트 획득. 총 비교 후 제일 센거. 나머지 내려놓음
-# 칸에 총이 두개일 수 있나? yes
-# 이동했는데 플레이어, 총 있으면 총 줍나? 안 주울 것이라 가정
-# 플레이어 번호 중요
 
 def fight(i, you): # 둘 위치 동일
-    *_, d, power, gun = player[i]
-    nr, nc, _, fp, fg = player[you]
+    r, c, _, power, gun = player[i]
+    *_, fp, fg = player[you]
 
     if (power + gun > fp + fg) or (power + gun == fp + fg and power > fp):  # 내가 더 쎔. 상대방 이동
-        # 점수 획득
-        points[i] += (power + gun) - (fp + fg)
-
-        # 진 사람 총 내려놓고 이동
-        if fg:
-            matrix[nr][nc].append(fg)
-            player[you][4] = 0
-
-        lose(you)
-
-        # 이긴 사람 총 비교
-        player[i][4] = get_gun(nr, nc, gun)
-        player_loc[(nr, nc)] = i
-
+        winner, loser = i, you
     else:  # 상대가 더 쎔. 내가 이동
-        # 점수 획득
-        points[you] += abs((power + gun) - (fp + fg))
+        winner, loser = you, i
 
-        # 진 사람 총 내려놓고 이동
-        if gun:
-            matrix[nr][nc].append(gun)
-            player[i][4] = 0
+    # 점수 획득
+    points[winner] += abs((power + gun) - (fp + fg))
 
-        lose(i)
+    # 진 사람 총 내려놓고 이동
+    loser_gun = player[loser][4]
+    if loser_gun:
+        matrix[r][c].append(loser_gun)
+        player[loser][4] = 0
 
-        # 이긴 사람 총 비교
-        player[you][4] = get_gun(nr, nc, fg)
+    lose(loser)
+
+    # 이긴 사람 총 비교
+    player[winner][4] = get_gun(r, c, player[winner][4])
+    player_loc[(r, c)] = winner
 
 
 def lose(idx): # 진 사람 이동. 만약 다 돌았는데도 빈칸 없으면 어케 하지
@@ -77,7 +65,7 @@ def get_gun(r, c, gun):
         return gun
 
 def move():
-    for i in range(len(player)):
+    for i in range(P):
         r, c, d, power, gun = player[i]
         nr = r + dr[d]
         nc = c + dc[d]
@@ -87,16 +75,16 @@ def move():
             nr = r + dr[d]
             nc = c + dc[d]
 
-        # 일단 이동
+        # 2. 일단 이동
         player[i] = [nr, nc, d, power, gun]
         player_loc.pop((r, c), None)
 
-        # 사람 있으면 싸움
+        # 3. 사람 있으면 싸움
         if (nr, nc) in player_loc:
             idx = player_loc[(nr, nc)]  # 싸울 대상
             fight(i, idx)
 
-        # 총 줍기, 이동
+        # 4. 총 줍기, 이동
         else:
             player[i][4] = get_gun(nr, nc, gun)
             player_loc[(nr, nc)] = i
@@ -111,12 +99,12 @@ points = [0] * P
 player = [] # 위치, 방향, 능력치, 총
 player_loc = dict() # 위치 : 플레이어 번호
 
-for _ in range(P):
+for i in range(P):
     X, Y, D, S = map(int, input().split()) # 위치, 방향, 초기 능력치
     X -= 1
     Y -= 1
 
-    player_loc[(X, Y)] = len(player)
+    player_loc[(X, Y)] = i
     player.append([X, Y, D, S, 0])
 
 for _ in range(R):

@@ -53,7 +53,7 @@ def bfs(r, c, i):
 def move():
     new_matrix = [row[:] for row in matrix] # 다 이동한 뒤에 갈아끼기
 
-    for i in range(1, min(turn+1, P+1)):
+    for i in range(1, min(turn, P+1)): # 직전 사람까지만 이동
         if not player[i]:
             continue
 
@@ -108,13 +108,7 @@ N, P = map(int, input().split()) # 15, 30
 matrix = [list(map(int, input().split())) for _ in range(N)]
 # 0 = 빈칸, 1 = 베이스캠프, 2 = 편의점, -1 = 이용한 베캠, -2 = 도착한 편의점
 player = [0] * (P+1)
-store = [0] # 편의점이랑 플레이어 번호 매핑
-
-for _ in range(P):
-    x, y = map(lambda x: int(x)-1, input().split())
-
-    matrix[x][y] = 2 # 편의점 표시. 굳이 안 해도 될거 같기도 하고
-    store.append((x, y))
+store = [0] + [tuple(map(lambda x: int(x)-1, input().split())) for _ in range(P)] # 편의점이랑 플레이어 번호 매핑
 
 turn = 0
 

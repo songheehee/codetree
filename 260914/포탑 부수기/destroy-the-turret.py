@@ -18,8 +18,9 @@
 
 from collections import deque
 
-def attacker():
-    min_val, minr, minc = 5001, -1, -1
+def find():
+    min_val, minr, minc = 5001, -1, -1 # 제일 약한 애
+    max_val, maxr, maxc = 0, -1, -1 # 제일 강한 애
 
     for i in range(N):
         for j in range(M):
@@ -30,26 +31,15 @@ def attacker():
             if (-val, last[i][j], i+j, j) > (-min_val, last[minr][minc], minr+minc, minc):
                 min_val = val
                 minr, minc = i, j
-
-    matrix[minr][minc] += N+M
-    last[minr][minc] = time
-
-    return minr, minc
-
-def strongest():
-    max_val, maxr, maxc = 0, -1, -1
-
-    for i in range(N):
-        for j in range(M):
-            val = matrix[i][j]
-            if val == 0 or (i == ar and j == ac):
-                continue
-
+                
             if (-val, last[i][j], i+j, j) < (-max_val, last[maxr][maxc], maxr+maxc, maxc):
                 max_val = val
                 maxr, maxc = i, j
 
-    return maxr, maxc
+    matrix[minr][minc] += N+M
+    last[minr][minc] = time
+
+    return minr, minc, maxr, maxc
 
 def razor():
     visited = [[0] * M for _ in range(N)]
@@ -112,12 +102,9 @@ for time in range(1, K+1):
         break
 
     # 1. 공격자 선정
-    ar, ac = attacker()
+    ar, ac, sr, sc = find()
 
-    # 2. 제일 강한 포탑 선정
-    sr, sc = strongest()
-
-    # 3. 레이저 -> 안되면 포탄
+    # 2. 레이저 -> 안되면 포탄
     points = razor()
 
     power = matrix[ar][ac]
@@ -129,7 +116,7 @@ for time in range(1, K+1):
         matrix[r][c] -= power
         matrix[r][c] = max(matrix[r][c], 0)
 
-    # 4. 공격 무관한 애들 +1
+    # 3. 공격 무관한 애들 +1
     for i in range(N):
         for j in range(M):
             if matrix[i][j] == 0:

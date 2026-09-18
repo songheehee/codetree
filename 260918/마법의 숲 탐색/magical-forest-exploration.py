@@ -24,66 +24,30 @@ def down(r, c):
         gr = nr + dr[i]
         gc = c + dc[i]
 
-        if not (0 <= gr < R): # 밖에 삐져나온 골렘
+        if gr < 0: # 아직 숲 밖에 있는 애
             continue
 
-        if not (0 <= gc < C):  # 밖에 삐져나온 골렘
-            return False, r, c
-
-        if matrix[gr][gc]: # 다른 골렘
+        if not (0 <= gc < C) or matrix[gr][gc]: # 왼, 오로는 나가면 안됨 or 다른 골렘 있음
             return False, r, c
 
     return True, nr, c # 골렘 안 마주침
 
 
-def left(): # 왼쪽 이동, 반시계
-    nc = c-1
-    nd = (d-1+4) % 4
-
-    for i in (0, 2, 3):  # 골렘 상하좌
+def side(nc, nd): # 왼쪽 이동, 반시계
+    for i in range(4):  # 골렘
         gr = r + dr[i]
         gc = nc + dc[i]
 
         if gr < 0: # 위에 있는 골렘 패스
             continue
 
-        if not (0 <= gc < C):  # 밖에 삐져나온 골렘
+        if not (0 <= gc < C) or matrix[gr][gc]: # 이동 불가
             return False, r, c, d
-
-        if matrix[gr][gc]:  # 다른 골렘
-            return False, r, c, d # 이동 불가
 
     # 왼쪽 갔으면 아래도
     possible, nr, nc = down(r, nc)
 
     if not possible: # 아래로 못가
-        return False, r, c, d
-
-    # 아래로 이동 성공
-    return True, nr, nc, nd
-
-
-def right(): # 시계 방향
-    nc = c+1
-    nd = (d+1) % 4
-
-    for i in range(3):  # 골렘 상하우
-        gr = r + dr[i]
-        gc = nc + dc[i]
-
-        if gr < 0: # 위에 있는 골렘 패스
-            continue
-
-        if not (0 <= gc < C):  # 밖에 삐져나온 골렘
-            return False, r, c, d
-
-        if matrix[gr][gc]:  # 다른 골렘
-            return False, r, c, d  # 이동 불가
-
-    # 오른쪽 갔으면 아래도
-    possible, nr, nc = down(r, nc)
-
-    if not possible:  # 아래로 못가
         return False, r, c, d
 
     # 아래로 이동 성공
@@ -97,7 +61,7 @@ def draw(): # 맵에 표시
         nr = r + dr[i]
         nc = c + dc[i]
 
-        matrix[nr][nc] = num if i != d else -num
+        matrix[nr][nc] = num if i != d else -num # 끄트머리, 출구
 
 
 def move(): # 정령 이동
@@ -109,22 +73,20 @@ def move(): # 정령 이동
     while q:
         cr, cc, num = q.popleft()
 
+        if maxr == R-1: # 마지막 행이면 검사할 필요 없음
+            return maxr + 1
+
         for i in range(4):
             nr = cr + dr[i]
             nc = cc + dc[i]
 
-            if not (0 <= nr < R and 0 <= nc < C and not visited[nr][nc]):
+            if not (0 <= nr < R and 0 <= nc < C):
                 continue
 
             if visited[nr][nc] or not matrix[nr][nc]:
                 continue
 
-            if num > 0 and matrix[nr][nc] == num: # 같은 골렘 내
-                q.append((nr, nc, matrix[nr][nc]))
-                visited[nr][nc] = 1
-                maxr = max(maxr, nr)
-
-            elif matrix[nr][nc] == -num or num < 0: # 출구 or 같은 골렘 내
+            if (num > 0 and abs(matrix[nr][nc]) == num) or num < 0: # 같은 골렘 내 or 출구
                 q.append((nr, nc, matrix[nr][nc]))
                 visited[nr][nc] = 1
                 maxr = max(maxr, nr)
@@ -146,27 +108,21 @@ for num in range(1, K+1):
     while True:
         possible, r, c = down(r, c)
 
+        # 못 가면 왼쪽
         if not possible:
-            possible, r, c, d = left()
+            possible, r, c, d = side(c-1, (d-1+4) % 4)
 
-            if not possible: # 왼쪽 이동 불가 -> 오른쪽
-                possible, r, c, d = right()
+        # 왼쪽 이동 불가 -> 오른쪽
+        if not possible:
+            possible, r, c, d = side(c+1, (d+1) % 4)
 
-        if not possible or r == R-2: # 못 움직이거나 바닥까지 이동했으면 끝
+        # 그래도 못 가거나 바닥까지 갔으면 끝
+        if not possible or r == R-2:
             break
 
     # 만약 내려왔는데도 격자 밖이다 -> 새 맵. 다시 시작
-    restart = False
-    for i in range(4):
-        gr = r + dr[i]
-        gc = c + dc[i]
-
-        if not (0 <= gr < R and 0 <= gc < C):  # 밖에 삐져나온 골렘
-            matrix = [[0] * C for _ in range(R)]
-            restart = True
-            break
-
-    if restart:
+    if r <= 0:
+        matrix = [[0] * C for _ in range(R)]
         continue
 
     # 맵에 반영

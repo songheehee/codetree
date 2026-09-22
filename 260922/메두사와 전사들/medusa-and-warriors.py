@@ -2,7 +2,7 @@
 # 메두사 집 -> 공원. 도로 따라서 최단 경로로 이동
 # 집, 공원 무조건 도로 위에 있음. 둘 좌표는 무조건 다름
 # 전사들 메두사 향해 최단 경로로 이동. 전사는 도로, 비도로 다 이동 가능
-# 전사 초기 위치 != 집
+# 전사 초기 위치 != 메두사 초기 위치
 # 메두사 전사 움직이기 전에 바라봐서 돌로 만들 수 있음
 
 # 1. 메두사 이동
@@ -32,25 +32,16 @@
 # 공원 도착하면 0 출력 끝
 # 메두사 집에서 공원까지 가는 도로 없으면 -1
 
-# 사라진 전사 pop 하기. 메두사 시선 때 in 검사 해야돼서 dict로
-# 집 -> 공원 여러 맨해튼 거리 최단 경로 가능한가? 따로 조건 봐야되나?
-# 전사들 이동 안 할 수도 있음
-# 어차피 같은 위치의 전사면 다 같이 이동
-# 한 턴만 기절하니까 그냥 set으로 검사하자
-
 from collections import deque
 
 def move(): # 전사 이동
     new_warriors = dict() # 새로운 전사 위치
     total = 0 # 이동한 거리
-    count = 0 # 죽은 전사
+    dead = 0 # 죽은 전사
 
     for (r, c), ppl in warriors.items():
         if (r, c) in stone: # 기절 한 애들
-            if (r, c) in new_warriors:
-                new_warriors[(r, c)] += ppl
-            else:
-                new_warriors[(r, c)] = ppl
+            new_warriors[(r, c)] = ppl # 위치 절대 안 겹침
             continue
 
         min_dist = abs(sr-r) + abs(sc-c) # 현재 메두사와의 거리
@@ -75,6 +66,10 @@ def move(): # 전사 이동
             total += ppl # 있는 애들 다 이동
             break
 
+        if minr == sr and minc == sc: # 메두사 마주침 -> 사라짐
+            dead += ppl # 해당 칸 애들 다
+            continue # 이동 더 안 해도 됨
+
         # 두번 이동
         for d in [2, 3, 0, 1]: # 좌우상하
             nr = minr + dr[d]
@@ -94,8 +89,8 @@ def move(): # 전사 이동
             break
 
         if minr == sr and minc == sc: # 메두사 마주침 -> 사라짐
-            count += ppl # 해당 칸 애들 다
-        else:
+            dead += ppl # 해당 칸 애들 다
+        else: # 새 위치 저장
             warrior_grid[minr][minc] += ppl
 
             if (minr, minc) in new_warriors:
@@ -103,7 +98,7 @@ def move(): # 전사 이동
             else:
                 new_warriors[(minr, minc)] = ppl
 
-    return count, total, new_warriors
+    return dead, total, new_warriors
 
 
 def look():
@@ -164,7 +159,7 @@ def look():
     return max_count, max_stone, max_eyes
 
 
-def block(idx, nr, nc, eyes): # 전사 뒤 막기
+def block(idx, nr, nc, eyes): # 전사 뒤 볼 수 없는 곳 다 막기
     if idx == 0:  # 상하 -> 열 막기
         for i in range(nr - 1, -1, -1):
             if nc == sc:
@@ -273,7 +268,6 @@ else:
 
     while True:
         turn += 1
-        ans = [0, 0, 0] # 전사 이동 거리, 돌 전사, 공격 전사
 
         # 2. 메두사 경로 따라 이동, 전사 만나면 전사 사라짐
         # 메두사 공원 도착하면 0
@@ -289,11 +283,8 @@ else:
 
         # 3. 메두사 시선
         count, stone, eyes = look()
-        ans[1] += count
 
         # 4. 전사 이동
         dead, total, warriors = move()
-        ans[0] += total
-        ans[2] += dead
 
-        print(*ans) # 각 턴마다 모든 전사가 이동한 거리의 합, 돌 전사 수, 공격 전사 수
+        print(total, count, dead) # 각 턴마다 모든 전사가 이동한 거리의 합, 돌 전사 수, 공격 전사 수

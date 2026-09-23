@@ -55,23 +55,19 @@ def spread(): # 신앙심 전파
 
             if food[nr][nc] != f: # 음식 다른 경우에 전파 진행
                 if x > spirit[nr][nc]: # 강한 전파
-                    food[nr][nc] = f
+                    food[nr][nc] = set(f) # 얕은 복사 주의
                     spirit[nr][nc] += 1 # 원래 있던 신앙심 +1
                     x -= spirit[nr][nc]
 
                 else: # 약한 전파
-                    new_food = set(f) # 전파 음식
-                    new_food.update(set(food[nr][nc])) # 본인 음식
-                    new_food = sorted(list(new_food))
-                    food[nr][nc] = ''.join(new_food)
-
+                    food[nr][nc].update(f)
                     spirit[nr][nc] += x
                     x = 0
 
                 # 전파 당하면 방어 상태
                 defense.add((nr, nc))
 
-                if x <= 0:
+                if x <= 0: # 방어 상태 넣어주고 종료하기ㅠ
                     break
 
             r, c = nr, nc
@@ -112,16 +108,19 @@ def make_group(r, c):
 
 
 def food_index(f):
-    # 단일 - 민,초,우 / 이중 - 초우,민우,민초 / 삼중 순
-    types = {'CMT': 0, 'CT': 1, 'MT': 2, 'CM': 3, 'M': 4, 'C': 5, 'T': 6}  # 인덱스 매칭
-    return types[f]
+    # 삼중 / 이중 - 초우,민우,민초 / 단일 - 민,초,우
+    types = {0:{'C','M','T'}, 1:{'C','T'}, 2:{'M','T'}, 3:{'C','M'}, 4:{'M'}, 5:{'C'}, 6:{'T'}} # 인덱스 매칭
+
+    for k, v in types.items():
+        if f == v:
+            return k
 
 
 dr = [-1, 1, 0, 0] # 위아왼오
 dc = [0, 0, -1, 1]
 
 N, T = map(int, input().split()) # 50, 30
-food = [list(input().strip()) for _ in range(N)] # 각 학생 신봉 음식
+food = [list(map(set, input().strip())) for _ in range(N)] # 각 학생 신봉 음식
 spirit = [list(map(int, input().split())) for _ in range(N)] # 각 학생 신앙심
 
 for _ in range(T):

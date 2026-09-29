@@ -41,11 +41,7 @@ def spin():
     er, ec = ec, size-1-er
     er, ec = er+r, ec+c
 
-    for idx in range(P):
-        if player[idx] is None:
-            continue
-
-        pr, pc = player[idx]
+    for idx, (pr, pc) in enumerate(player):
         if r <= pr < r+size and c <= pc < c+size:
             pr, pc = pr - r, pc - c
             pr, pc = pc, size-1-pr
@@ -65,11 +61,7 @@ def find_square():
         for i in range(N+1-size):
             for j in range(N+1-size):
                 if i <= er < i+size and j <= ec < j+size: # 출구 있음
-                    for idx in range(P):
-                        if player[idx] is None:
-                            continue
-
-                        r, c = player[idx]
+                    for r, c in player:
                         if i <= r < i+size and j <= c < j+size:
                             return size, i, j
 
@@ -77,10 +69,7 @@ def find_square():
 def move():
     total = 0
 
-    for idx in range(P):
-        if player[idx] is None:
-            continue
-
+    for idx in range(len(player)-1, -1, -1):
         r, c = player[idx]
         min_dist = abs(er-r) + abs(ec-c)
         minr, minc = r, c
@@ -106,7 +95,7 @@ def move():
         total += 1
 
         if minr == er and minc == ec: # 출구 도착
-            player[idx] = None
+            player.pop(idx)
         else:
             player[idx] = (minr, minc)
 
@@ -133,8 +122,8 @@ for _ in range(K):
     # 1. 참가자 이동
     total += move()
 
-    # 참가자 나갔으면 종료
-    if player.count(None) == P:
+    # 참가자 다 나갔으면 종료
+    if not player:
         break
 
     # 2. 미로 회전

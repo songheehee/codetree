@@ -1,3 +1,29 @@
+'''
+소요시간 : 1시간 33분 30초
+수행 시간 : 145ms / 메모리 : 21MB
+시도 : 3번
+
+이해 및 구상 (13분) - 구현 및 디버깅 (50분) - 디버깅 (30분 30초)
+
+[구상]
+    - 구상은 쉬웠다. 하라는 대로 하면 될듯?
+    - 물건 있는 거 유의!! matrix[i][j] 로 검사하면 안되고 0보다 큰 걸로 검사해야된다
+    - 이동할 때 가장 가까운 곳 중 행작, 열작 -> 단계 bfs로 하자
+    - 이동, 청소 모두 순서대로. 확산만 동시에
+
+[구현]
+    - 현재 청소기 위치에 먼지가 남아있을 수 있음 -> 그럼 움직이지 않음
+    - 먼지가 없으면 청소기 위치 어떻게 찾지? -> 어차피 끝
+    - 먼지 청소할 때 최대가 20. 자기 위치는 무조건 청소함
+    - 청소할 때 4방 다 먼지 없을 수도 -> 그럼 청소하지 않음
+    - 먼지 축적은 먼지 있는 곳만, 먼지 확산은 먼지 없는 곳만 -> 새로운 매트릭스 덮어씌워주기
+    - 4방 탐색할 때 인덱스 유의! 물건 있는 곳 유의!
+
+[실수]
+    - 청소기 장애물에 가로막혀서 못 움직일 수도 있다!
+    - 먼지가 없을 수도 있음...
+    - 3방향 볼 때 자기 반대편만 안 보면 됨 -> 오타 났었음
+'''
 # 좌상단 1,1
 # 1. 먼지가 있거나, 2. 먼지가 없거나, 3. 물건 있거나
 # 먼지는 1~100
@@ -36,11 +62,10 @@ def spread():
                     nr = i + dr[d]
                     nc = j + dc[d]
 
-                    if not (0 <= nr < N and 0 <= nc < N):
+                    if not (0 <= nr < N and 0 <= nc < N and matrix[nr][nc] > 0): # 먼지 있는 곳만
                         continue
 
-                    if matrix[nr][nc] > 0: # 먼지 있는 곳만
-                        dust += matrix[nr][nc]
+                    dust += matrix[nr][nc]
 
                 new_matrix[i][j] = dust // 10
 
@@ -49,32 +74,34 @@ def spread():
 
 def cleaning():
     for r, c in clean:
-        max_dust, maxd = 0, 0 # 먼지량 가장 큰 방향
         matrix[r][c] -= min(matrix[r][c], 20) # 본인 위치 먼지 제거
+        dir_dust = [0] * 4 # 방향 별 먼지. 오아왼위 순
 
         for d in range(4):
-            dust = 0
+            nr = r + dr[d]
+            nc = c + dc[d]
 
-            for fd in front[d]: # 3방향
-                nr = r + dr[fd]
-                nc = c + dc[fd]
+            if not (0 <= nr < N and 0 <= nc < N and matrix[nr][nc] > 0):
+                continue
 
-                if not (0 <= nr < N and 0 <= nc < N and matrix[nr][nc] > 0):
+            dir_dust[d] = min(matrix[nr][nc], 20)
+
+        # 주변에 먼지가 하나라도 있어야 청소
+        if sum(dir_dust):
+            max_dust, maxd = 0, 0 # 먼지량 가장 큰 방향
+
+            for d in range(4):
+                total = sum(dir_dust[idx] for idx in range(4) if idx != (d+2)%4) # 자기 반대편 제외 먼지 합
+                
+                if total > max_dust:
+                    max_dust, maxd = total, d
+
+            for d in range(4):
+                if d == (maxd+2) % 4 or dir_dust[d] == 0: # 반대편 제외, 먼지 없는 곳 제외
                     continue
 
-                dust += min(matrix[nr][nc], 20)
-
-            if dust > max_dust:
-                max_dust, maxd = dust, d
-
-        # 가장 큰 방향 정해졌으면 먼지 없애주기
-        if max_dust:
-            for fd in front[maxd]:
-                nr = r + dr[fd]
-                nc = c + dc[fd]
-
-                if not (0 <= nr < N and 0 <= nc < N and matrix[nr][nc] > 0):
-                    continue
+                nr = r + dr[d]
+                nc = c + dc[d]
 
                 matrix[nr][nc] -= min(matrix[nr][nc], 20)
 
@@ -99,10 +126,10 @@ def move(r, c, idx):
                 if matrix[nr][nc] == -1 or (nr, nc) in clean: # 물건 있거나, 청소기 있거나
                     continue
 
-                if matrix[nr][nc]:
-                    if (minr, minc) > (nr, nc): # 먼지 있으면
+                if matrix[nr][nc]: # 먼지 있으면
+                    if (minr, minc) > (nr, nc):
                         minr, minc = nr, nc
-                else:
+                else: # 먼지 없는 곳이면 이동 가능
                     q.append((nr, nc))
                     visited[nr][nc] = visited[cr][cc] + 1
 
@@ -120,7 +147,7 @@ front = [[0, 1, 3], # 오 -> 왼만 제외
          [0, 2, 3]] # 위
 
 N, K, L = map(int, input().split()) # 격자, 청소기 개수, 테스트 횟수. 30, 50, 50
-matrix = [list(map(int, input().split())) for _ in range(N)] # -1=물건
+matrix = [list(map(int, input().split())) for _ in range(N)] # -1 = 물건
 clean = []
 
 for _ in range(K):

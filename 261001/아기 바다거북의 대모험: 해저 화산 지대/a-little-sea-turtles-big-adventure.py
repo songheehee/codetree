@@ -43,18 +43,21 @@
 
 from collections import deque
 
+
 def spread():
-    done = set() # 이미 분출한 화산 위치
-    q = deque() # 분출할 화산들, 열기
+    done = set()  # 이미 분출한 화산 위치
+    q = deque()  # 분출할 화산들, 열기
 
     for (r, c), p in volcano.items():
         if magma[r][c] >= p:
-            hot_grid[r][c] += p
-            magma[r][c] = 0 # 분출한 화산 마그마 0
-            q.append((r, c, p//2))
+            hot_grid[r][c] = p
+            magma[r][c] = 0  # 분출한 화산 마그마 0
             done.add((r, c))
 
-    while q: # 남아있을 때까지
+            if p // 2:
+                q.append((r, c, p // 2))
+
+    while q:  # 분출할 화산 남아있을 때까지
         cr, cc, cp = q.popleft()
 
         for d in range(4):
@@ -68,7 +71,7 @@ def spread():
                 if not (0 <= nr < N and 0 <= nc < N):
                     break
 
-                if matrix[nr][nc] == 1 or hot == 0: # 산호초 만나거나 열기 0 되면 끝
+                if matrix[nr][nc] == 1 or hot == 0:  # 산호초 만나거나 열기 0 되면 끝
                     break
 
                 hot_grid[nr][nc] += hot
@@ -77,16 +80,19 @@ def spread():
                 sr, sc = nr, nc
 
                 # 분출되지 않은 화산 중 임계치 넘은 애도 추가
-                if (nr, nc) in volcano and (nr, nc) not in done and magma[nr][nc]+hot_grid[nr][nc] >= volcano[(nr, nc)]:
+                if (nr, nc) in volcano and (nr, nc) not in done and magma[nr][nc] + hot_grid[nr][nc] >= volcano[
+                    (nr, nc)]:
                     np = volcano[(nr, nc)]
                     hot_grid[nr][nc] += np
                     magma[nr][nc] = 0
-                    q.append((nr, nc, np//2))
                     done.add((nr, nc))
+
+                    if np // 2:
+                        q.append((nr, nc, np // 2))
 
 
 def fossil():
-    for i in range(1, T+1):
+    for i in range(1, T + 1):
         if turtle[i] is None:
             continue
 
@@ -95,12 +101,12 @@ def fossil():
         if hot_grid[r][c] >= 20:
             turtle[i] = None
             arrive[i] = -1
-            matrix[r][c] = -1 # 화석 표시
+            matrix[r][c] = -1  # 화석 표시
 
 
 def move(r, c):
     visited = [[0] * N for _ in range(N)]
-    q = deque([(r, c, None)]) # 최단 경로의 첫칸
+    q = deque([(r, c, None)])  # 최단 경로의 첫칸
     visited[r][c] = 1
 
     while q:
@@ -113,10 +119,10 @@ def move(r, c):
             if not (0 <= nr < N and 0 <= nc < N):
                 continue
 
-            if visited[nr][nc] or matrix[nr][nc] or (nr, nc) in turtle: # 산호초, 화석, 바다거북 불가
+            if visited[nr][nc] or matrix[nr][nc] or (nr, nc) in turtle:  # 산호초, 화석, 바다거북 불가
                 continue
 
-            if nr == N-1 and nc == N-1: # 안식처 도착
+            if nr == N - 1 and nc == N - 1:  # 안식처 도착
                 return True, first if first else (nr, nc)
 
             q.append((nr, nc, first if first else (nr, nc)))
@@ -126,36 +132,32 @@ def move(r, c):
     return False, (r, c)
 
 
-dr = [0, 1, 0, -1] # 우하좌상
+dr = [0, 1, 0, -1]  # 우하좌상
 dc = [1, 0, -1, 0]
 
-N, T, V = map(int, input().split()) # 격자, 바다거북 수, 화산 수. 20, 10, 10
-matrix = [list(map(int, input().split())) for _ in range(N)] # 1 = 산호초. -1 = 화석
-turtle = [None] # 바다거북 초기 위치. 1번부터
-volcano = dict() # 화산 위치 : 임계치
-magma = [[0] * N for _ in range(N)] # 현재 마그마
-arrive = [-1] * (T+1) # 각 거북이 도착한 턴 번호
-
-for _ in range(T):
-    r, c = map(int, input().split())
-    turtle.append((r, c))
+N, T, V = map(int, input().split())  # 격자, 바다거북 수, 화산 수. 20, 10, 10
+matrix = [list(map(int, input().split())) for _ in range(N)]  # 1 = 산호초. -1 = 화석
+turtle = [None] + [tuple(map(int, input().split())) for _ in range(T)]  # 바다거북 초기 위치. 1번부터
+volcano = dict()  # 화산 위치 : 임계치
+magma = [[0] * N for _ in range(N)]  # 현재 마그마
+arrive = [-1] * (T + 1)  # 각 거북이 도착한 턴 번호. 도착 못 했을 때 -1
 
 for _ in range(V):
     r, c, p = map(int, input().split())
     volcano[(r, c)] = p
 
-for turn in range(1, 101): # 100턴까지 진행
+for turn in range(1, 101):  # 100턴까지 진행
     # 1. 거북이 순서대로 이동
-    for i in range(1, T+1):
-        if turtle[i]: # 남은 애들만
+    for i in range(1, T + 1):
+        if turtle[i]:  # 남은 애들만
             can, (r, c) = move(*turtle[i])
 
-            if can: # 최단 거리 움직일 수 있으면
-                if r == N-1 and c == N-1: # 안식처 도착
+            if can:  # 최단 거리 움직일 수 있으면
+                if r == N - 1 and c == N - 1:  # 안식처 도착
                     turtle[i] = None
                     arrive[i] = turn
                 else:
-                    turtle[i] = (r, c) # 새로운 위치
+                    turtle[i] = (r, c)  # 새로운 위치
 
     # 2. 마그마 +10
     for r, c in volcano.keys():

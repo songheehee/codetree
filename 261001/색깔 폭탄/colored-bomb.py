@@ -18,25 +18,19 @@ from collections import deque
 
 def gravity():
     for j in range(N):
-        pointer = N-1
+        pointer = N-1 # 폭탄 놓을 위치
 
-        while pointer:
-            if matrix[pointer][j] > -2: # 폭탄, 돌
-                pointer -= 1
+        for i in range(N-1, -1, -1):
+            if matrix[i][j] == -1: # 돌
+                pointer = i-1 # 돌 위
                 continue
 
-            for i in range(pointer-1, -1, -1):
-                if matrix[i][j] == -1: # 돌 위로 이동
-                    pointer = i-1
-                    break
-
-                if pointer != i and matrix[i][j] >= 0:
+            if matrix[i][j] >= 0: # 폭탄 놓기
+                if pointer != i:
                     matrix[pointer][j] = matrix[i][j]
-                    matrix[i][j] = -2 # 빈칸
-                    pointer -= 1
+                    matrix[i][j] = -2
 
-            else: # 무사히 다 돌았으면 끝
-                break
+                pointer -= 1
 
 
 def find(r, c):

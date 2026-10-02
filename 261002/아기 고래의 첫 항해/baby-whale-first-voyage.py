@@ -20,6 +20,8 @@
 from collections import deque
 
 def close():
+    global wr, wc, wd
+    
     qvisited = [[0] * N for _ in range(N)] # bfs용 visited
     q = deque([(wr, wc)])
     qvisited[wr][wc] = 1
@@ -36,7 +38,7 @@ def close():
                 if not (0 <= nr < N and 0 <= nc < N):
                     continue
 
-                if qvisited[nr][nc] or matrix[nr][nc]:
+                if qvisited[nr][nc] or matrix[nr][nc]: # 큐에 있음, 암초
                     continue
 
                 if visited[nr][nc] == 0 and (minr, minc) > (nr, nc): # 방문 안한 바다
@@ -46,9 +48,13 @@ def close():
                     qvisited[nr][nc] = qvisited[cr][cc] + 1
 
         if minr < N:
-            return minr, minc, mind
+            wr, wc, wd = minr, minc, mind
+            visited[wr][wc] = 1
+            ans.append((wr, wc))
+            
+            return True # 이동했음
 
-    return -1, -1, -1 # 가장 가까운 바다 없음
+    return False # 가장 가까운 바다 없음
 
 
 def near(): # 현재 위치 4방 다 보기
@@ -75,17 +81,12 @@ def near(): # 현재 위치 4방 다 보기
 
 dr = [0, 1, 0, -1] # 좌하우상
 dc = [-1, 0, 1, 0]
+dirs = {0:3, 1:1, 2:0, 3:2} # 입력값 바꿔주기
 
 N, wr, wc, wd = map(lambda x: int(x)-1, input().split()) # 고래 위치. 50
-N += 1
-if wd == 0: # 상
-    wd = 3
-elif wd == 2: # 좌
-    wd = 0
-elif wd == 3: # 우
-    wd = 2
-
+N, wd = N+1, dirs[wd]
 matrix = [list(map(int, input().split())) for _ in range(N)]
+
 visited = [[0] * N for _ in range(N)] # 방문한 바다 표시
 visited[wr][wc] = 1
 ans = [(wr, wc)] # 시작 위치 포함
@@ -96,13 +97,10 @@ while True:
 
     # 2. 가장 가까운 바다
     if not move: # 인접 탐험 못함
-        wr, wc, wd = close()
+        move = close()
 
-        if wr == -1:
-            break
-
-        visited[wr][wc] = 1
-        ans.append((wr, wc))
+    if not move: # 갈 수 있는 바다 없음
+        break
 
 for r, c in ans:
     print(r+1, c+1) # 바다 칸의 위치 순서대로 출력. 시작 위치 포함

@@ -21,7 +21,7 @@ from collections import deque
 
 def close():
     global wr, wc, wd
-    
+
     qvisited = [[0] * N for _ in range(N)] # bfs용 visited
     q = deque([(wr, wc)])
     qvisited[wr][wc] = 1
@@ -41,8 +41,9 @@ def close():
                 if qvisited[nr][nc] or matrix[nr][nc]: # 큐에 있음, 암초
                     continue
 
-                if visited[nr][nc] == 0 and (minr, minc) > (nr, nc): # 방문 안한 바다
-                    minr, minc, mind = nr, nc, d
+                if visited[nr][nc] == 0: # 방문 안한 바다
+                    if (minr, minc) > (nr, nc):
+                        minr, minc, mind = nr, nc, d
                 else:
                     q.append((nr, nc))
                     qvisited[nr][nc] = qvisited[cr][cc] + 1
@@ -51,7 +52,7 @@ def close():
             wr, wc, wd = minr, minc, mind
             visited[wr][wc] = 1
             ans.append((wr, wc))
-            
+
             return True # 이동했음
 
     return False # 가장 가까운 바다 없음

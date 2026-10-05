@@ -14,56 +14,56 @@ def get_gun(r, c, gun): # 가장 센 총
 
         if max_gun > gun:
             matrix[r][c].pop() # 빼주고
-            matrix[r][c].append(gun) # 원래 갖고 있던 거 놔두기
+            if gun:
+                matrix[r][c].append(gun) # 원래 갖고 있던 거 놔두기
 
             return max_gun
 
     return gun # 내가 가진 총이 제일 셈
 
 
-def move():
-    for i in range(1, P+1):
-        r, c, d, power, gun = player[i]
+def move(i):
+    r, c, d, power, gun = player[i]
+    nr = r + dr[d]
+    nc = c + dc[d]
+    ppl[r][c] = 0 # 전 위치 삭제
+
+    if not (0 <= nr < N and 0 <= nc < N): # 격자 벗어나면 정반대
+        d = (d+2) % 4
         nr = r + dr[d]
         nc = c + dc[d]
-        ppl[r][c] = 0 # 전 위치 삭제
 
-        if not (0 <= nr < N and 0 <= nc < N): # 격자 벗어나면 정반대
-            d = (d+2) % 4
-            nr = r + dr[d]
-            nc = c + dc[d]
+    if not ppl[nr][nc]: # 사람 없음 -> 총 챙기기
+        player[i] = nr, nc, d, power, get_gun(nr, nc, gun)
+        ppl[nr][nc] = i
+        return
 
-        if not ppl[nr][nc]: # 사람 없음 -> 총 챙기기
-            player[i] = nr, nc, d, power, get_gun(nr, nc, gun)
-            ppl[nr][nc] = i
-            continue
+    # 플레이어 있음 -> 싸우기
+    you = ppl[nr][nc]
+    *_, youd, you_power, you_gun = player[you]
+    diff = abs(power+gun - (you_power+you_gun)) # 차이만큼 포인트 획득
 
-        # 플레이어 있음 -> 싸우기
-        you = ppl[nr][nc]
-        *_, youd, you_power, you_gun = player[you]
-        diff = abs(power+gun - (you_power+you_gun)) # 차이만큼 포인트 획득
+    if power+gun > you_power+you_gun or (power+gun == you_power+you_gun and power > you_power): # 내가 이김
+        # 진 사람 총 두고 이동
+        if you_gun: # 총 있으면 총 냅두기
+            matrix[nr][nc].append(you_gun)
 
-        if power+gun > you_power+you_gun or (power+gun == you_power+you_gun and power > you_power): # 내가 이김
-            # 진 사람 총 두고 이동
-            if you_gun: # 총 있으면 총 냅두기
-                matrix[nr][nc].append(you_gun)
+        lose(you, youd, nr, nc)
 
-            lose(you, youd, nr, nc)
+        # 이긴 사람 포인트, 총 줍기
+        points[i] += diff
+        player[i] = nr, nc, d, power, get_gun(nr, nc, gun)
+        ppl[nr][nc] = i
 
-            # 이긴 사람 포인트, 총 줍기
-            points[i] += diff
-            player[i] = nr, nc, d, power, get_gun(nr, nc, gun)
-            ppl[nr][nc] = i
+    else: # 너가 이김
+        if gun: # 총 있으면 총 냅두기
+            matrix[nr][nc].append(gun)
 
-        else: # 너가 이김
-            if gun: # 총 있으면 총 냅두기
-                matrix[nr][nc].append(gun)
+        lose(i, d, nr, nc)
 
-            lose(i, d, nr, nc)
-
-            points[you] += diff
-            player[you] = nr, nc, youd, you_power, get_gun(nr, nc, you_gun)
-            ppl[nr][nc] = you
+        points[you] += diff
+        player[you] = nr, nc, youd, you_power, get_gun(nr, nc, you_gun)
+        ppl[nr][nc] = you
 
 
 def lose(idx, d, cr, cc): # 진 사람 이동
@@ -81,7 +81,7 @@ def lose(idx, d, cr, cc): # 진 사람 이동
         player[idx] = nr, nc, nd, player[idx][3], get_gun(nr, nc, 0)
         ppl[nr][nc] = idx
 
-        break
+        return
 
 
 dr = [-1, 0, 1, 0] # 위오아왼
@@ -103,6 +103,7 @@ for i in range(1, P+1):
 
 for _ in range(R):
     # 1. 플레이어 이동
-    move()
+    for i in range(1, P+1):
+        move(i)
 
 print(*points[1:]) # 각 플레이어들 획득 포인트

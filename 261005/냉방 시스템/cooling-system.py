@@ -19,13 +19,13 @@ def mix():
         for j in range(N):
             if cold[i][j]:
                 for d in range(4):
+                    if (i, j) in wall and d in wall[(i, j)]: # 벽 있으면
+                        continue
+                        
                     nr = i + dr[d]
                     nc = j + dc[d]
 
                     if not (0 <= nr < N and 0 <= nc < N and cold[i][j] > cold[nr][nc]): # 나보다 작은 애만
-                        continue
-
-                    if (i, j) in wall and d in wall[(i, j)]: # 벽 있으면
                         continue
 
                     diff = (cold[i][j] - cold[nr][nc]) // 4
@@ -54,25 +54,25 @@ def wind(ar, ac, ad):
                 sr, sc = cr, cc
 
                 if d is not None:
+                    if (sr, sc) in wall and d in wall[(sr, sc)]: # 벽 있으면 가지도 않음
+                        continue
+                        
                     nr = sr + dr[d]
                     nc = sc + dc[d]
 
-                    if not (0 <= nr < N and 0 <= nc < N):
-                        continue
-
-                    if visited[nr][nc] or ((sr, sc) in wall and d in wall[(sr, sc)]): # 벽 있으면 전파 x
+                    if not (0 <= nr < N and 0 <= nc < N and not visited[nr][nc]):
                         continue
 
                     sr, sc = nr, nc
 
                 # 여기까지 왔으면 직진
+                if (sr, sc) in wall and ad in wall[(sr, sc)]: # 벽 있으면 안감
+                    continue
+
                 nr = sr + dr[ad]
                 nc = sc + dc[ad]
 
-                if not (0 <= nr < N and 0 <= nc < N):
-                    continue
-
-                if visited[nr][nc] or ((sr, sc) in wall and ad in wall[(sr, sc)]): # 벽 있으면 전파 x
+                if not (0 <= nr < N and 0 <= nc < N and not visited[nr][nc]):
                     continue
 
                 q.append((nr, nc))

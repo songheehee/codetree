@@ -75,14 +75,11 @@ def reproduce():
 
                     dirs.append(d)
 
-                if dirs: # 번식될 수 있음
-                    tree = matrix[i][j] // len(dirs) # 번식될 나무 수
+                for d in dirs:
+                    nr = i + dr[d]
+                    nc = j + dc[d]
 
-                    for d in dirs:
-                        nr = i + dr[d]
-                        nc = j + dc[d]
-
-                        new_matrix[nr][nc] += tree
+                    new_matrix[nr][nc] += matrix[i][j] // len(dirs)
 
     return new_matrix
 
@@ -91,8 +88,6 @@ def grow():
     for i in range(N):
         for j in range(N):
             if matrix[i][j] > 0: # 나무 있는 칸만
-                tree = 0 # 주변 나무 칸 개수
-
                 for d in range(4):
                     nr = i + dr[d]
                     nc = j + dc[d]
@@ -101,9 +96,7 @@ def grow():
                         continue
 
                     if matrix[nr][nc] > 0: # 근처에 나무 있으면
-                        tree += 1
-
-                matrix[i][j] += tree
+                        matrix[i][j] += 1
 
 
 dr = [1, 0, -1, 0]

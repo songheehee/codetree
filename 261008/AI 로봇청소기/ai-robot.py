@@ -27,6 +27,7 @@ from collections import deque
 
 def clean(r, c): # 현재 위치에서 최대 먼지량
     max_dust, max_d = 0, 0
+    matrix[r][c] -= min(matrix[r][c], 20) # 현재 위치도
 
     for d in range(4): # 바라보는 방향
         dust = 0 # 해당 방향 먼지량
@@ -47,11 +48,7 @@ def clean(r, c): # 현재 위치에서 최대 먼지량
         if max_dust < dust:
             max_dust, max_d = dust, d
 
-    max_dust += matrix[r][c] # 자기 위치
-
     if max_dust: # 청소할 먼지 있으면
-        matrix[r][c] -= min(matrix[r][c], 20) # 현재 위치도
-
         for d in range(4):
             if d == (max_d+2) % 4:
                 continue

@@ -149,7 +149,7 @@ for turn in range(1, 101): # 100턴까지
                 matrix[r][c] = -1 # 화석 표시
 
     # 바다거북 다 나가면 종료
-    if turtle[1:].count(None) == T:
+    if turtle.count(None) == T+1:
         break
 
 for n in ans[1:]:
